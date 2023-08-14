@@ -63,7 +63,8 @@ class MyWidget(QtWidgets.QWidget):
             print("Select db and table first")
             return False
         else:
-            return self.db_manager.server_to_excel()
+            res = self.db_manager.server_to_excel()
+            self.output(res)
     def set_table_names_from_server_to_cb(self):
         if not self.db_name:
             print("Select db first")
@@ -72,7 +73,8 @@ class MyWidget(QtWidgets.QWidget):
             table_names = self.db_manager.show_table()
             self.cb_table_name.addItems([""]+table_names)
     def write_to_server(self):
-        self.db_manager.excel_to_server()
+        res = self.db_manager.excel_to_server()
+        self.output(res)
     def on_cb_table_name_changed(self, str):
         if str:
             self.set_params(str)

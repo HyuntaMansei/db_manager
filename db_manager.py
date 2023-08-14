@@ -86,6 +86,7 @@ class DBManager():
         print(f"In function df_to_server, table_name:{table_name}, column_names:{column_name_list}, ref. col: {ref_column} write option: {write_option}\ndf:{df.iloc[0].head()}")
         rows_to_replace = []
         rows_to_insert = []
+        res_list = []
         for i, d in df.iterrows():
             # sql = f"SELECT 1 FROM {table_name} where {ref_column} = '{d[ref_column]}'"
             sql = f"SELECT 1 FROM {table_name} where {ref_column} = %s"
@@ -158,22 +159,30 @@ class DBManager():
         conn.close()
         return res, col_names
     def write_to_server(self, sql, values):
-        try:
-            conn = self.connect_db()
-            cursor = conn.cursor()
-            if type(values) != list:
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        res = None
+        if type(values) != list:
+            try:
                 cursor.execute(sql, values)
-            else:
-                for i in range(len(values)):
+            except Exception as e:
+                print("Error: ", e)
+                res = e
+        else:
+            for i in range(len(values)):
+                try:
                     cursor.execute(sql, values[i])
-            res = cursor.fetchall()
+                except Exception as e:
+                    print("Error: ", e)
+                    res = e
+                    break
+        # res = cursor.fetchall()
+        if not res:
             conn.commit()
-            cursor.close()
-        except Exception as e:
-            print("Error: ", e)
-        finally:
-            conn.close()
-            return res
+            res = "Writing to server finished."
+        cursor.close()
+        conn.close()
+        return res
     def get_file_name_to_write(self):
         #현재 path에 해당 파일이름이 있는지 확인. 있으면 넘버링 증가. 다시 확인.
         if not self.table_name:
